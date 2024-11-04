@@ -1,0 +1,12 @@
+{% extends 'index.html' %}
+
+{% block titlebar %}
+Hot
+{% endblock %}
+
+{% block title %}
+<div class="d-flex gap-4 align-items-center">
+    <h5><a href="{% url 'index' %}">New Questions</a></h5>
+    <h1>Hot Questions</h1>
+</div>
+{% endblock %}
