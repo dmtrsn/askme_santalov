@@ -1,9 +1,6 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
-
-QUESTIONS = []
-for i in range(1, 30):
-    QUESTIONS.append({"title": "title " + str(i), "id": i - 1, "text": "text" + str(i)})
+from . import models
 
 
 def paginate(objects_list, request, per_page=10):
@@ -15,8 +12,8 @@ def paginate(objects_list, request, per_page=10):
 
 
 def index(request):
-    items = paginate(QUESTIONS, request)
-    return render(request, "index.html", context={"items": items})
+    items = paginate(models.Question.objects.get_new(), request)
+    return render(request, "index.html", context={"pag_items": items})
 
 
 def ask(request):
@@ -32,15 +29,18 @@ def signup(request):
 
 
 def question(request, question_id):
-    item = QUESTIONS[question_id]
-    return render(request, "question.html", context={"question": item})
+    item = models.Question.objects.get(question_id)
+    answers = paginate(models.Answer.objects.get_by_question(question_id), request, 30)
+    return render(
+        request, "question.html", context={"question": item, "pag_items": answers}
+    )
 
 
 def hot(request):
-    items = paginate(QUESTIONS[:11], request, 5)
-    return render(request, "hot.html", context={"items": items})
+    items = paginate(models.Question.objects.get_hot(), request)
+    return render(request, "hot.html", context={"pag_items": items})
 
 
 def tag(request, tag):
-    items = paginate(QUESTIONS[14:20], request, 5)
-    return render(request, "tag.html", context={"tag": tag, "items": items})
+    items = paginate(models.Question.objects.get_by_tag(tag), request, 5)
+    return render(request, "tag.html", context={"tag": tag, "pag_items": items})

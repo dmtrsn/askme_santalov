@@ -7,7 +7,7 @@ Askme
 {% endblock %}
 
 {% block title %}
-<div class="d-flex gap-4 align-items-center">
+<div class="d-flex gap-4 align-pag_items-center">
     <h1>New Questions</h1>
     <h5><a href="{% url 'hot' %}">Hot Questions</a></h5>
 </div>
@@ -15,16 +15,16 @@ Askme
 
 {% block content %}
 <div class="d-flex flex-column gap-3">
-    {% for question in items %}
+    {% for question in pag_items %}
     <div class="card w-100" style="width: 18rem;">
         <div class="card-body">
             <div class="row">
                 <div class="col-lg-3 col-5">
                     <div class="mx-auto" style="width: 50px; height: 50px;">
-                        <img src="{% static 'img/images.jpeg' %}" class="img-fluid" alt="Card Image">
+                        <img src="{{question.user.profile.avatar}}" class="img-fluid" alt="Card Image">
                     </div>
                     <div class="mt-4">
-                        <p class="text-center">0 votes</p>
+                        <p class="text-center">{{question.get_raiting_value}} votes</p>
                     </div>
                     <div class="d-flex justify-content-center gap-2">
                         <button type="button" class="btn btn-success">▲</button>
@@ -37,13 +37,14 @@ Askme
                     </a>
                     <p class="card-text d-none d-md-block">{{ question.text }}</p>
                     <div class="d-flex gap-lg-5 gap-3">
-                        <a href="#" class="card-link">Answer (5)</a>
+                        <a href="{% url 'question' question.id %}" class="card-link">Answer ({{question.get_answers.count}})</a>
                         <div class="d-lg-flex gap-lg-2">
                             Tags:
-
-                            <a href="#" class=""><span class="badge text-bg-primary">Tag-1</span></a>
-                            <a href="#" class=""><span class="badge text-bg-success">Tag-2</span></a>
-                            <a href="#" class=""><span class="badge text-bg-warning">Tag-3</span></a>
+                            {% for tag in question.tags.all %}
+                            <a href="{% url 'tag' tag.tag %}" class=""><span class="badge text-bg-primary">{{tag.tag}}</span></a>
+                            {% endfor %}
+                            <!-- <a href="#" class=""><span class="badge text-bg-success">Tag-2</span></a>
+                            <a href="#" class=""><span class="badge text-bg-warning">Tag-3</span></a> -->
                         </div>
                     </div>
                 </div>
