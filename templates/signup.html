@@ -1,4 +1,5 @@
 {% extends 'layouts/base.html' %}
+{% load bootstrap5 %}
 
 {% block titlebar %} Sigup {% endblock %}
 
@@ -7,30 +8,14 @@
 {% endblock %}
 
 {% block content %}
-    <div class="alert alert-danger col-lg-9" role="alert">
-        Incorrect password
-    </div>
-    <form class="col-lg-9">
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email">
-        </div>
-        <div class="mb-3">
-            <label for="nickname" class="form-label">Nickname</label>
-            <input type="text" class="form-control" id="nickname" maxlength="32">
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password">
-        </div>
-        <div class="mb-3">
-            <label for="repeat_password" class="form-label">Repeat Password</label>
-            <input type="password" class="form-control" id="repeat_password">
-        </div>
-        <div class="mb-3">
-            <label for="avatar" class="form-label">Upload avatar</label>
-            <input class="form-control" type="file" id="avatar" accept=".img, .jpg, .jpeg">
-        </div>
-        <button type="submit" class="btn btn-primary">Register!</button>
+    <form class="col-lg-9" enctype="multipart/form-data" action="{% url 'signup' %}" method="POST">
+        {% csrf_token %}
+
+        {% bootstrap_form form %}
+
+        {% buttons %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}"/>
+        <button type="submit" class="btn btn-primary">Signup!</button>
+        {% endbuttons %}
     </form>
 {% endblock %}

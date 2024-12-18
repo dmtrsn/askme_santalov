@@ -1,4 +1,5 @@
 {% extends 'layouts/base.html' %}
+{% load bootstrap5 %}
 
 {% load static %}
 
@@ -71,11 +72,14 @@
     {% include 'blocks/paginator.html' %}
     <hr>
     <h3>Your Answer</h3>
-    <form>
-        <div class="mb-3">
-            <textarea class="form-control" placeholder="Enter your answer here..." rows="10"></textarea>
-        </div>
+    <form action="{% url 'question'  question_id  %}" method="POST">
+        {% csrf_token %}
+
+        {% bootstrap_form form %}
+
+        {% buttons %}
         <button type="submit" class="btn btn-primary">Submit</button>
+        {% endbuttons %}
     </form>
 </div>
 <br>

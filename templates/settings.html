@@ -1,118 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'layouts/base.html' %}
+{% load bootstrap5 %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Question</title>
-    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
-</head>
+{% block titlebar %} {{ user.username }} {% endblock %}
 
-<body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
-            <a class="navbar-brand d-lg-none" href="#">Askme</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
-                <a class="navbar-brand d-none d-md-block" href="#">Askme</a>
-                <form class="d-flex mb-2 mt-2 mt-lg-0 mb-lg-0" role="search">
-                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-success" type="submit">Search</button>
-                </form>
-                <div class="d-flex gap-1">
-                    <button class="btn btn-outline-primary mb-2 mb-lg-0" type="submit">Ask!</button>
-                    <img src="avatar.jpg" alt="dr pepper" class="img-thumbnail">
-                    <div>
-                        <div>
-                            dr pepper
-                        </div>
-                        <a href="">settings</a>
-                        <a href="">logout</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+{% block title %}
+<h1>Профиль {{ user.username }}</h1>
+{% endblock %}
 
-    <main class="container mt-3">
-        <h1>Settings: dr pepper</h1>
-        <div class="row mt-4">
-            <div class="col-8">
-                <div class="alert alert-danger col-lg-9" role="alert">
-                    Incorrect email
-                </div>
-                <form class="col-lg-9">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email">
-                    </div>
-                    <div class="mb-3">
-                        <label for="nickname" class="form-label">Nickname</label>
-                        <input type="text" class="form-control" id="nickname" maxlength="32">
-                    </div>
-                    <div class="mb-3">
-                        Avatar
-                    </div>
-                    <div class="mb-3">
-                        <img src="../static/img/images.jpeg" alt="12" style="width: 100px; height: 100px;">
-                    </div>
-                    <div class="mb-3">
-                        <label for="avatar" class="form-label">Upload</label>
-                        <input class="form-control" type="file" id="avatar" accept=".img, .jpg, .jpeg">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </form>
-            </div>
-            <div class="col-4">
-                <section class="mb-3">
-                    <h2>Popular Tags</h2>
-                    <div>
-                        <a href=""><span class="badge text-bg-primary">Tag1</span></a>
-                        <a href=""><span class="badge text-bg-secondary">Tag2</span></a>
-                        <a href=""><span class="badge text-bg-success">Tag3</span></a>
-                        <a href=""><span class="badge text-bg-danger">Tag4</span></a>
-                        <a href=""><span class="badge text-bg-warning">Tag5</span></a>
-                        <a href=""><span class="badge text-bg-info">Tag6</span></a>
-                        <a href=""><span class="badge text-bg-light">Tag7</span></a>
-                        <a href=""><span class="badge text-bg-dark">Tag8</span></a>
-                    </div>
-                </section>
+{% block content %}
+    <form class="col-lg-9" enctype="multipart/form-data" action="{% url 'profile.edit' %}" method="POST">
+        {% csrf_token %}
 
-                <section>
-                    <h2>Best Members</h2>
-                    <div>
-                        <ul class="list-group list-group-flush">
-                            <a href="">
-                                <li class="list-group-item">Member 1</li>
-                            </a>
-                            <a href="">
-                                <li class="list-group-item">Member 2</li>
-                            </a>
-                            <a href="">
-                                <li class="list-group-item">Member 3</li>
-                            </a>
-                            <a href="">
-                                <li class="list-group-item">Member 4</li>
-                            </a>
-                            <a href="">
-                                <li class="list-group-item">Member 5</li>
-                            </a>
-                        </ul>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </main>
+        {% bootstrap_messages %}
 
-    <footer class="bg-body-tertiary py-2 mt-auto">
-        <p class="text-center">askme_santalov©2024</p>
-    </footer>
+        {% bootstrap_form user_form %}
+        {% bootstrap_form profile_form %}
 
-    <script src="../static/js/bootstrap.min.js"></script>
-</body>
-
-</html>
+        {% buttons %}
+        <button type="submit" class="btn btn-primary">Save</button>
+        {% endbuttons %}
+    </form>
+{% endblock %}

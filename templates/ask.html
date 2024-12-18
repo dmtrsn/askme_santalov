@@ -1,5 +1,7 @@
 {% extends 'layouts/base.html' %}
 
+{% load bootstrap5 %}
+
 {% block titlebar %} New Question {% endblock %}
 
 {% block title %}
@@ -7,22 +9,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="alert alert-danger col-lg-9" role="alert">
-    You need to enter the title of your question
-</div>
-<form class="col-lg-9">
-    <div class="mb-3">
-        <label for="title" class="form-label">Title</label>
-        <input type="text" class="form-control" id="title">
-    </div>
-    <div class="mb-3">
-        <label for="text" class="form-label">Text</label>
-        <textarea rows="10" class="form-control" id="text"></textarea>
-    </div>
-    <div class="mb-3">
-        <label for="tags" class="form-label">Tags</label>
-        <input type="text" list="tagsList" class="form-control" id="tags" />
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
+
+<form class="col-lg-9" action="{% url 'ask' %}" method="POST">
+    {% csrf_token %}
+
+    {% bootstrap_form form %}
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">Ask!</button>
+    {% endbuttons %}
 </form>
 {% endblock %}

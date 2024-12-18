@@ -1,5 +1,7 @@
 {% extends 'layouts/base.html' %}
 
+{% load bootstrap5 %}
+
 {% block titlebar %} Login {% endblock %}
 
 {% block title %}
@@ -7,19 +9,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="alert alert-danger col-lg-9" role="alert">
-    Invalid username or password
-</div>
-<form class="col-lg-9">
-    <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username">
-    </div>
-    <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password">
-    </div>
+
+<form class="col-lg-9" action="{% url 'login' %}" method="POST">
+    {% csrf_token %}
+
+    {% bootstrap_form form %}
+    <input type="hidden" name="next" value="{{ next }}"/>
+    {% buttons %}
     <button type="submit" class="btn btn-primary">Log in!</button>
+    {% endbuttons %}
 </form>
 <br>
 <a href="">create new account</a>
