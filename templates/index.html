@@ -21,14 +21,16 @@ Askme
             <div class="row">
                 <div class="col-lg-3 col-5">
                     <div class="mx-auto" style="width: 50px; height: 50px;">
-                        <img src="{{question.user.profile.avatar}}" class="img-fluid" alt="Card Image">
+                        <img src="{{MEDIA_URL}}{{question.author.profile.avatar}}" class="img-fluid" alt="{{question.author.username}}">
                     </div>
-                    <div class="mt-4">
-                        <p class="text-center">{{question.get_raiting_value}} votes</p>
-                    </div>
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-success">▲</button>
-                        <button type="button" class="btn btn-danger">▼</button>
+                    <div class="like-section">
+                        <div class="mt-4 d-flex justify-content-center gap-1">
+                            <p class="text-center">{{question.get_raiting_value}}</p><p class="text-center">votes</p>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-success">▲</button>
+                            <button type="button" class="btn btn-danger">▼</button>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-9 col-7">

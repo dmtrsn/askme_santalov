@@ -2,11 +2,21 @@ from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.contrib import auth
 from django.urls import reverse
-from .forms import LoginForm, SignupForm, UpdateUserForm, UpdateProfileForm, AskForm, AnswerForm
+from .forms import (
+    LoginForm,
+    SignupForm,
+    UpdateUserForm,
+    UpdateProfileForm,
+    AskForm,
+    AnswerForm,
+)
 from . import models
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.conf import settings
+from django.http import JsonResponse
 
 
 def paginate(objects_list, request, per_page=10):
@@ -84,8 +94,22 @@ def question(request, question_id):
         if form.is_valid():
             form.save()
             return redirect("question", question_id)
+    is_liked, is_dislaked = False, False
+    if request.user.is_authenticated:
+        is_liked, is_dislaked = models.QuestionLike.objects.get_likes_and_dislikes(
+            request.user, item
+        )
     return render(
-        request, "question.html", context={"question": item, "pag_items": answers, "form": form, "question_id": question_id}
+        request,
+        "question.html",
+        context={
+            "question": item,
+            "pag_items": answers,
+            "form": form,
+            "question_id": question_id,
+            "is_liked": is_liked,
+            "is_dislaked": is_dislaked,
+        },
     )
 
 
@@ -111,5 +135,43 @@ def profile_edit(request):
         if user_form.is_valid() and profile_form.is_valid():
             edit_profile_success(request, user_form, profile_form)
     return render(
-        request, "settings.html", {"user_form": user_form, "profile_form": profile_form}
+        request,
+        "settings.html",
+        {
+            "user_form": user_form,
+            "profile_form": profile_form,
+        },
     )
+
+
+@csrf_protect
+@login_required
+def question_like(request):
+    id = request.POST.get("question_id")
+    question = models.Question.objects.get_or_404_json(int(id))
+    raiting_type = request.POST.get("raiting_type")
+    if not question:
+        return JsonResponse({"404": "object does not exist"})
+    is_liked, is_dislaked = models.QuestionLike.objects.toggle_like(
+        user=request.user, question=question, raiting_type=raiting_type
+    )  # raiting_type := {"Like", "Dislike"}
+    raiting = question.get_raiting_value()
+    return JsonResponse(
+        {"raiting": raiting, "is_liked": is_liked, "is_dislaked": is_dislaked}
+    )
+
+
+@csrf_protect
+@login_required
+def answer_like(request):
+    id = request.POST.get("answer_id")
+    answer = models.Answer.objects.get_or_404_json(int(id))
+    if not answer:
+        return JsonResponse({"404": "object does not exist"})
+    if answer.question.author != request.user:
+        return JsonResponse({"404": "you cant mark this answer"})
+    is_marked_right = models.Answer.objects.toggle_right(answer=answer)
+    return JsonResponse(
+        {"is_maked_right": is_marked_right}
+    )
+    

@@ -23,7 +23,13 @@ class QuestionManager(models.Manager):
         return self.all().order_by("-created_at")
 
     def get(self, question_id):
-        return get_object_or_404(Question, id=question_id)
+        return get_object_or_404(Question, pk=question_id)
+
+    def get_or_404_json(self, question_id):
+        if self.filter(pk=question_id).exists():
+            return self.filter(pk=question_id).first()
+        else:
+            return False
 
 
 class AnswerManager(models.Manager):
@@ -38,6 +44,23 @@ class AnswerManager(models.Manager):
 
     def get_new(self):
         return self.all().order_by("-created_at")
+
+    def get_or_404_json(self, answer_id):
+        if self.filter(pk=answer_id).exists():
+            return self.filter(pk=answer_id).first()
+        else:
+            return False
+
+    def toggle_right(self, answer):
+        is_marked_right = False
+        if answer.is_correct:
+            answer.is_correct = False
+            answer.save()
+        else:
+            is_marked_right = True
+            answer.is_correct = True
+            answer.save()
+        return is_marked_right
 
 
 class Tag(models.Model):
@@ -72,10 +95,57 @@ class Question(models.Model):
         return Answer.objects.get_by_question(self)
 
 
+class QuestionLikeManager(models.Manager):
+    def get_likes_and_dislikes(self, user, question):
+        is_like = False
+        is_dislike = False
+        if self.filter(user=user, question=question).exists():
+            obj = self.get(user=user, question=question)
+            if obj.is_like:
+                is_like = True
+            else:
+                is_dislike = True
+        return (is_like, is_dislike)
+
+    def toggle_like(self, user, question, raiting_type):
+        is_liked = False
+        is_dislaked = False
+        is_like = True
+        if raiting_type == "Dislike":
+            is_like = False
+        if self.filter(user=user, question=question).exists():
+            like = self.get(user=user, question=question)
+            if like.is_like and not is_like:
+                is_liked = False
+                is_dislaked = True
+                like.is_like = False
+                like.save()
+            elif not like.is_like and is_like:
+                is_liked = True
+                is_dislaked = False
+                like.is_like = True
+                like.save()
+            elif (like.is_like and is_like) or (not like.is_like and not is_like):
+                is_liked = False
+                is_dislaked = False
+                self.filter(user=user, question=question).delete()
+        else:
+            if is_like:
+                is_liked = True
+                is_dislaked = False
+            else:
+                is_liked = False
+                is_dislaked = True
+            self.create(user=user, question=question, is_like=is_like)
+        return (is_liked, is_dislaked)
+
+
 class QuestionLike(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_like = models.BooleanField()
+
+    objects = QuestionLikeManager()
 
     class Meta:
         unique_together = ["question", "user"]
@@ -119,7 +189,9 @@ class Profile(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    avatar = models.ImageField(null=True, blank=True)
+    avatar = models.ImageField(
+        null=True, blank=True, default="avatar.png", upload_to="avatar/%Y/%m/%d"
+    )
     theme = models.CharField(
         choices=THEME_CHOICES, max_length=10, default=THEME_CHOICES[0][0]
     )

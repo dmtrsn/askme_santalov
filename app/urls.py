@@ -12,4 +12,6 @@ urlpatterns = [
     path("hot/", views.hot, name="hot"),
     path("tag/<str:tag>", views.tag, name="tag"),
     path("profile/edit", views.profile_edit, name="profile.edit"),
+    path("question/like", views.question_like, name="question_like"),
+    path("answer/like", views.answer_like, name="answer_like"),
 ]

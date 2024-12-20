@@ -64,6 +64,18 @@ class UpdateProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ("avatar", "theme")
+        
+    def save(self):
+        data = self.cleaned_data
+        profile = super().save(commit=False)
+        
+        avatar = data.get("avatar")
+        if not avatar:
+            avatar = "avatar.png"
+            profile.avatar = avatar
+        
+        profile.save()
+        return data
 
 
 class AskForm(forms.ModelForm):
