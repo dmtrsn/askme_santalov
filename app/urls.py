@@ -14,5 +14,7 @@ urlpatterns = [
     path("profile/edit", views.profile_edit, name="profile.edit"),
     path("question/like", views.question_like, name="question_like"),
     path("answer/like", views.answer_like, name="answer_like"),
+    path("search/", views.search, name="search"),
+    path("autocomplete", views.autocomplete, name="autocomplete"),
     path("staticpage", views.staticpage, name="staticpage")
 ]

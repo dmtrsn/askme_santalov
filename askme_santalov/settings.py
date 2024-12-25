@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "app",
     "bootstrap5",
 ]
@@ -144,7 +145,20 @@ LOGIN_URL = '/login'
 MEDIA_ROOT = BASE_DIR / 'uploads/'
 MEDIA_URL = '/uploads/'
 
-STATIC_ROOT = BASE_DIR / 'static/'
+# STATIC_ROOT = BASE_DIR / 'static/'
 STATIC_URL = '/static/'
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost:81"]
+
+CENTRIFUGO_TOKEN_HMAC_SECRET="490badb7-d52a-4ba1-8c86-90021d0bc5eb"
+CENTRIFUGO_WS_URL="ws://127.0.0.1:8010/connection/websocket"
+CENTRIFUGO_API_URL="http://127.0.0.1:8010/api" 
+CENTRIFUGO_API_KEY="a438185b-b07d-462e-b2af-4807d5d9058b" 
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/var/tmp/django_cache",
+    }
+}

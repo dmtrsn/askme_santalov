@@ -3,7 +3,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
-from django.utils.text import slugify
 
 
 class QuestionManager(models.Manager):
@@ -38,8 +37,8 @@ class AnswerManager(models.Manager):
 
     def get_hot(self):
         return self.annotate(
-            like_count=Count("questionlike", filter=Q(questionlike__is_like=True))
-            - Count("questionlike", filter=Q(questionlike__is_like=False))
+            like_count=Count("answerlike", filter=Q(answerlike__is_like=True))
+            - Count("answerlike", filter=Q(answerlike__is_like=False))
         ).order_by("-like_count")
 
     def get_new(self):
@@ -63,8 +62,17 @@ class AnswerManager(models.Manager):
         return is_marked_right
 
 
+class TagManager(models.Manager):
+    def get_popular_tags(self):
+        return self.annotate(num_questions=Count("questions")).order_by(
+            "-num_questions"
+        )[:10]
+
+
 class Tag(models.Model):
     tag = models.CharField(max_length=255)
+
+    objects = TagManager()
 
     def __str__(self):
         return self.tag
@@ -76,7 +84,7 @@ class Question(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(Tag, related_name="questions")
     raiting = models.ManyToManyField(
         User, through="app.QuestionLike", related_name="QuestionLike"
     )
@@ -182,19 +190,27 @@ class AnswerLike(models.Model):
         unique_together = ["answer", "user"]
 
 
+class ProfileManager(models.Manager):
+    def get_popular_users(self):
+        hot_answers = Answer.objects.get_hot()[:10]
+        return [answer.author for answer in hot_answers]
+
+
 class Profile(models.Model):
     THEME_CHOICES = [
         ("light", "light"),
         ("dark", "dark"),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     avatar = models.ImageField(
         null=True, blank=True, default="avatar.png", upload_to="avatar/%Y/%m/%d"
     )
     theme = models.CharField(
         choices=THEME_CHOICES, max_length=10, default=THEME_CHOICES[0][0]
     )
+
+    objects = ProfileManager()
 
     def __str__(self):
         return self.user.username

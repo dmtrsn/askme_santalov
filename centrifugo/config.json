@@ -1,0 +1,10 @@
+{
+    "token_hmac_secret_key": "490badb7-d52a-4ba1-8c86-90021d0bc5eb",
+    "admin_password": "dcbcd2b0-9e04-46a0-b6e2-5de2ec18a81b",
+    "admin_secret": "c1363c78-b5f9-4496-a0f4-c8c35b5fe719",
+    "api_key": "a438185b-b07d-462e-b2af-4807d5d9058b",
+    "admin": true,
+    "allowed_origins": ["http://127.0.0.1:8000"],
+    "allow_subscribe_for_client": true
+}
+  

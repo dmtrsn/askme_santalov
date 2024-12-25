@@ -4,7 +4,7 @@
 {% if user.is_authenticated %}
 <html lang="en" data-bs-theme="{{user.profile.theme}}">
 {% else %}
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="dark">
 {% endif %}
 
 <head>
@@ -12,6 +12,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block titlebar %} Base {% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -24,14 +26,20 @@
       </button>
       <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
         <a class="navbar-brand d-none d-md-block" href="{% url 'index' %}">Askme</a>
-        <form class="d-flex mb-2 mt-2 mt-lg-0 mb-lg-0" role="search">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <form class="d-flex mb-2 mt-2 mt-lg-0 mb-lg-0" action="{% url 'search' %}" method="get" role="search">
+          <div>
+            <input class="form-control me-2" id="search-input" name="q" type="search" placeholder="Search"
+              aria-label="Search">
+            <div id="autocomplete-suggestions" class="position-absolute w-100 bg-dark border rounded shadow"
+              style="z-index: 1050; display: none;"></div>
+          </div>
           <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
         {% if request.user.is_authenticated %}
         <div class="d-flex gap-1">
           <a href="{% url 'ask' %}"><button class="btn btn-outline-primary mb-2 mb-lg-0">Ask!</button></a>
-          <img src="{{MEDIA_URL}}{{ request.user.profile.avatar }}" alt="{{ request.user.username }}" class="img-thumbnail" style="width: 50px; height: 50px;">
+          <img src="{{MEDIA_URL}}{{ request.user.profile.avatar }}" alt="{{ request.user.username }}"
+            class="img-thumbnail" style="width: 50px; height: 50px;">
           <div>
             <div>
               {{ request.user.username }}
@@ -41,10 +49,10 @@
           </div>
         </div>
         {% else %}
-          <div class="d-flex gap-3">
-            <a href="{% url 'login' %}?next={{ request.path }}"><button class="btn btn-primary">Login</button></a>
-            <a href="{% url 'signup' %}"><button class="btn btn-primary">Signup</button></a>
-          </div>
+        <div class="d-flex gap-3">
+          <a href="{% url 'login' %}?next={{ request.path }}"><button class="btn btn-primary">Login</button></a>
+          <a href="{% url 'signup' %}"><button class="btn btn-primary">Signup</button></a>
+        </div>
         {% endif %}
       </div>
     </div>
@@ -67,14 +75,9 @@
         <section class="mb-3">
           <h2>Popular Tags</h2>
           <div>
-            <a href="{% url 'tag' 'tag1' %}"><span class="badge text-bg-primary">Tag1</span></a>
-            <a href="{% url 'tag' 'tag2' %}"><span class="badge text-bg-secondary">Tag2</span></a>
-            <a href="{% url 'tag' 'tag3' %}"><span class="badge text-bg-success">Tag3</span></a>
-            <a href="{% url 'tag' 'tag4' %}"><span class="badge text-bg-danger">Tag4</span></a>
-            <a href="{% url 'tag' 'tag5' %}"><span class="badge text-bg-warning">Tag5</span></a>
-            <a href="{% url 'tag' 'tag6' %}"><span class="badge text-bg-info">Tag6</span></a>
-            <a href="{% url 'tag' 'tag7' %}"><span class="badge text-bg-light">Tag7</span></a>
-            <a href="{% url 'tag' 'tag8' %}"><span class="badge text-bg-dark">Tag8</span></a>
+            {% for tag in popular_tags %}
+            <a href="{% url 'tag' tag.tag %}"><span class="badge text-bg-primary">{{tag.tag}}</span></a>
+            {% endfor %}
           </div>
         </section>
 
@@ -82,21 +85,11 @@
           <h2>Best Members</h2>
           <div>
             <ul class="list-group list-group-flush">
-              <a href="">
-                <li class="list-group-item">Member 1</li>
+              {% for user in popular_users %}
+              <a>
+                <li class="list-group-item">{{ user.username }}</li>
               </a>
-              <a href="">
-                <li class="list-group-item">Member 2</li>
-              </a>
-              <a href="">
-                <li class="list-group-item">Member 3</li>
-              </a>
-              <a href="">
-                <li class="list-group-item">Member 4</li>
-              </a>
-              <a href="">
-                <li class="list-group-item">Member 5</li>
-              </a>
+              {% endfor %}
             </ul>
           </div>
         </section>
@@ -110,6 +103,60 @@
   </footer>
 
   <script src="{% static 'js/bootstrap.min.js' %}"></script>
+  <script>
+    let timeoutId;
+
+    document.querySelector('#search-input').addEventListener('input', function (event) {
+      clearTimeout(timeoutId);
+
+      const query = event.target.value.trim();
+      const suggestionsBox = document.querySelector('#autocomplete-suggestions');
+
+      if (!query) {
+        suggestionsBox.style.display = 'none';
+        suggestionsBox.innerHTML = '';
+        return;
+      }
+
+      timeoutId = setTimeout(() => {
+        fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
+          .then(response => response.json())
+          .then(data => {
+            const results = data.results;
+
+            if (results.length > 0) {
+              suggestionsBox.innerHTML = results.map(result =>
+                `<div class="p-2 suggestion-item" data-id="${result.id}">
+                            ${result.title}
+                        </div>`
+              ).join('');
+              suggestionsBox.style.display = 'block';
+            } else {
+              suggestionsBox.innerHTML = '<div class="p-2 text-muted">No results found</div>';
+              suggestionsBox.style.display = 'block';
+            }
+          })
+          .catch(() => {
+            suggestionsBox.innerHTML = '<div class="p-2 text-danger">Error fetching results</div>';
+            suggestionsBox.style.display = 'block';
+          });
+      }, 300);
+    });
+
+    document.querySelector('#autocomplete-suggestions').addEventListener('click', function (event) {
+      const item = event.target.closest('.suggestion-item');
+      if (item) {
+        const id = item.getAttribute('data-id');
+        window.location.href = `/question/${id}`;
+      }
+    });
+
+    document.querySelector('#search-input').addEventListener('blur', function () {
+      setTimeout(() => {
+        document.querySelector('#autocomplete-suggestions').style.display = 'none';
+      }, 200);
+    });
+  </script>
 </body>
 
 </html>

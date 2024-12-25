@@ -49,54 +49,62 @@
         </div>
     </div>
     <hr>
-    <h3>{{question.get_answers.count}} Answers</h3>
-    {% for answer in pag_items %}
-    <div class="card w-100" style="width: 18rem;">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-lg-3 col-5">
-                    <div class="mx-auto" style="width: 50px; height: 50px;">
-                        <img src="{{MEDIA_URL}}{{ answer.author.profile.avatar }}" class="img-fluid"
-                            alt="{{answer.author.username}}">
+    <div class="d-flex justify-content-left gap-1">
+        <h3 id="count">{{question.get_answers.count}}</h3> 
+        <h3> Answers</h3>
+    </div>
+    <div id="answers">
+        {% for answer in pag_items %}
+        <div class="card w-100" style="width: 18rem;">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-5">
+                        <div class="mx-auto" style="width: 50px; height: 50px;">
+                            <img src="{{MEDIA_URL}}{{ answer.author.profile.avatar }}" class="img-fluid"
+                                alt="{{answer.author.username}}">
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-center">{{ answer.get_raiting_value }} votes</p>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-success">▲</button>
+                            <button type="button" class="btn btn-danger">▼</button>
+                        </div>
                     </div>
-                    <div class="mt-4">
-                        <p class="text-center">{{ answer.get_raiting_value }} votes</p>
-                    </div>
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-success">▲</button>
-                        <button type="button" class="btn btn-danger">▼</button>
-                    </div>
-                </div>
-                <div class="col-lg-9 col-7">
-                    <p class="card-text">{{ answer.content }}</p>
-                    <div class="d-flex gap-lg-5 gap-3">
-                        <div class="form-check">
-                            {% if question.author != request.user %}
-                            {% if answer.is_correct %}
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked
-                                disabled>
-                            {% else %}
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" disabled>
-                            {% endif %}
-                            <label class="form-check-label" for="flexCheckChecked">
-                                Correct
-                            </label>
-                            {% else %}
-                            <div class="answer-like-section">
+                    <div class="col-lg-9 col-7">
+                        <p class="card-text">{{ answer.content }}</p>
+                        <div class="d-flex gap-lg-5 gap-3">
+                            <div class="form-check">
+                                {% if question.author != request.user %}
                                 {% if answer.is_correct %}
-                                <button type="button" class="btn btn-outline-success" data-answer="{{answer.pk}}">Right!</button>
+                                <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked
+                                    disabled>
                                 {% else %}
-                                <button type="button" class="btn btn-success" data-answer="{{answer.pk}}">Right!</button>
+                                <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" disabled>
+                                {% endif %}
+                                <label class="form-check-label" for="flexCheckChecked">
+                                    Correct
+                                </label>
+                                {% else %}
+                                <div class="answer-like-section">
+                                    {% if answer.is_correct %}
+                                    <button type="button" class="btn btn-outline-success"
+                                        data-answer="{{answer.pk}}">Right!</button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-success"
+                                        data-answer="{{answer.pk}}">Right!</button>
+                                    {% endif %}
+                                </div>
                                 {% endif %}
                             </div>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <br>
+        {% endfor %}
     </div>
-    {% endfor %}
     {% include 'blocks/paginator.html' %}
     <hr>
     <h3>Your Answer</h3>
@@ -111,7 +119,88 @@
     </form>
 </div>
 <br>
-<script src="{% static 'js/question_like.js' %}"></script>
-<script src="{% static 'js/answer_like.js' %}"></script>
+<div id="scripts">
+    <script src="{% static 'js/question_like.js' %}"></script>
+    <script id="like_ans" src="{% static 'js/answer_like.js' %}"></script>
+</div>
+<script src="https://unpkg.com/centrifuge@5.0.1/dist/centrifuge.js"></script>
+<script>
+    const container = document.getElementById('answers');
+    const answers = container.children
+
+    const centrifuge = new Centrifuge("{{ centrifugo.ws_url }}", {
+        token: "{{ centrifugo.token }}"
+    });
+
+    centrifuge.on('connecting', function (ctx) {
+        console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
+    }).on('connected', function (ctx) {
+        console.log(`connected over ${ctx.transport}`);
+    }).on('disconnected', function (ctx) {
+        console.log(`disconnected: ${ctx.code}, ${ctx.reason}`);
+    }).connect();
+
+    const sub = centrifuge.newSubscription("{{ centrifugo.channel }}");
+
+    sub.on('publication', function (ctx) {
+        data = ctx.data
+        container.removeChild(answers[answers.length - 1]);
+        container.removeChild(answers[answers.length - 1]);
+        const e = document.createElement('div');
+        e.className = 'card w-100';
+        e.style.width = '18rem';
+        addition = ``
+        if (data["q_author"] != "{{centrifugo.user_id}}") {
+            addition = `<input class="form-check-input" type="checkbox" value="" id="flexCheckChecked"
+                disabled>                               
+                <label class="form-check-label" for="flexCheckChecked">
+                    Correct
+                </label>`
+        } else {
+            addition = `<div class="answer-like-section">
+                                    <button type="button" class="btn btn-success"
+                                        data-answer="{{answer.pk}}">Right!</button>
+                                </div>`
+        }
+        e.innerHTML = `
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-5">
+                        <div class="mx-auto" style="width: 50px; height: 50px;">
+                            <img src="`+ data['author_avatar'] + `" class="img-fluid"
+                                alt="`+ data["username"] + `">
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-center">0 votes</p>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-success">▲</button>
+                            <button type="button" class="btn btn-danger">▼</button>
+                        </div>
+                    </div>
+                    <div class="col-lg-9 col-7">
+                        <p class="card-text">`+ data["content"] + `</p>
+                        <div class="d-flex gap-lg-5 gap-3">
+                            <div class="form-check">`+ addition + `
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        br = document.createElement('br');
+        container.insertBefore(br, answers[0])
+        container.insertBefore(e, br)
+        const count = document.getElementById('count');
+        count.innerText = data["answers_count"]
+
+
+    }).on('subscribing', function (ctx) {
+        console.log(`subscribing: ${ctx.code}, ${ctx.reason}`);
+    }).on('subscribed', function (ctx) {
+        console.log('subscribed', ctx);
+    }).on('unsubscribed', function (ctx) {
+        console.log(`unsubscribed: ${ctx.code}, ${ctx.reason}`);
+    }).subscribe();
+</script>
 
 {% endblock %}
